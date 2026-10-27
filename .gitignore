@@ -1,0 +1,13 @@
+# Local configuration and generated output
+.env
+.env.*
+!.env.example
+/outputs/
+/work/
+**/coverage.out
+**/coverage/
+**/bin/
+**/.dlv/
+**/*.exe
+**/node_modules/
+**/dist/
