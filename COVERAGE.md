@@ -56,6 +56,63 @@ executed on this Windows machine.
 
 ## Pending scope
 
-- Frontend implementation, tests, coverage, and production build: not implemented.
 - Docker/Compose: deferred; not executed because local virtualization is unavailable.
 - Gabriel's personal code review and final full-stack validation: pending.
+
+## Frontend Verification
+
+Measured on October 27, 2026, on `feature/frontend-calculator`, using Node.js
+24.19.0, npm 11.17.0, and Vitest 5.0.5. From `frontend`:
+
+```sh
+npm ci
+npm run test:coverage
+npm run build
+```
+
+The frontend suite passed with **46 tests across 2 files**. Statement, function,
+and line coverage were **100%**; branch coverage was **98.79%** (82 of 83 branches).
+These figures include `App.tsx`, `Calculator.tsx`, and `calculatorApi.ts`.
+The DOM bootstrap in `main.tsx`, test setup, tests, configuration, and styles
+are excluded. The uncovered branch handles successful completion after a request
+was cancelled; unmount cancellation is tested through the rejection path.
+
+The suite verifies the four operation requests, zero/negative/decimal inputs,
+required and invalid fields, division by zero, keyboard submission, loading and
+duplicate-submit prevention, API errors and retry, stale-result clearing, reset
+and focus, result formatting, response validation, network failures, timeouts,
+and request cancellation. Component tests mock the API client; client tests mock
+`fetch`. Browser integration checks below use the actual Go API.
+
+The production build includes TypeScript checking and Vite asset generation.
+The HTML report is available locally at `frontend/coverage/index.html` and the
+machine-readable summary at `frontend/coverage/coverage-summary.json`.
+Neither generated file is included in Git.
+
+### Browser and Integration Checks
+
+The React app was exercised against a separate Go instance on port 8081 through
+Vite's proxy, without changing backend code or interfering with the developer's
+debug session on port 8080. Browser checks covered:
+
+- Addition (12), subtraction (8), multiplication (20), and division (5) with
+  operands 10 and 2.
+- Client-side division-by-zero feedback and a backend overflow error.
+- Negative decimal input and Enter submission: -2.5 + 1.5 returned -1.
+- Reset behavior, including returning focus to the first input.
+- A friendly error after deliberately stopping the test API.
+- Responsive layouts at widths 304, 320, 390, 768, and 1280 pixels. A narrow-screen
+  overflow issue was corrected; subsequent checks found no horizontal overflow.
+
+Embedded-browser hot reload became inconsistent after source formatting; an
+explicit reload restored the page and validation continued. The compiled build
+was then served with `npm run preview` at port 4173. A browser request for 24
+divided by 6 returned 4 through the proxy and the actual Go service.
+
+`npm ci` successfully reproduced the dependency installation from the lockfile.
+The npm installation audit reported zero known vulnerabilities at verification time.
+
+Backend regression tests were rerun during the frontend feature and passed with
+the same per-package coverage as recorded above. Gabriel previously confirmed
+manual backend checks and a passing backend unit-test run; frontend acceptance
+remains pending.
