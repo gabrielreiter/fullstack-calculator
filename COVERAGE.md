@@ -54,10 +54,9 @@ These live checks validate server startup but are not included in the unit-test
 coverage percentages above. The POSIX curl variant was documented but was not
 executed on this Windows machine.
 
-## Pending scope
+## Optional scope
 
 - Docker/Compose: deferred; not executed because local virtualization is unavailable.
-- Gabriel's personal code review and final full-stack validation: pending.
 
 ## Frontend Verification
 
@@ -113,6 +112,11 @@ divided by 6 returned 4 through the proxy and the actual Go service.
 The npm installation audit reported zero known vulnerabilities at verification time.
 
 Backend regression tests were rerun during the frontend feature and passed with
-the same per-package coverage as recorded above. Gabriel previously confirmed
-manual backend checks and a passing backend unit-test run; frontend acceptance
-remains pending.
+the same per-package coverage as recorded above.
+
+### Developer Validation
+
+Gabriel confirmed successful manual backend checks and a passing backend unit-test
+run. He subsequently tested the React frontend against the running API and
+confirmed that the application worked correctly in his environment.
+The coverage figures above remain those measured during the automated checks.

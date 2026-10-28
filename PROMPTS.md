@@ -125,4 +125,5 @@ system fonts without a component framework or external visual assets.
 Testing Library. Verification results, production build checks, real API
 integration checks, and responsive-browser checks are recorded in `COVERAGE.md`.
 
-**Developer review:** Frontend review and acceptance by Gabriel remain pending.
+**Developer validation:** Gabriel tested the frontend connected to the running
+API and confirmed that the application worked correctly in his environment.
