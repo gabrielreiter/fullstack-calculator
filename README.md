@@ -1,20 +1,21 @@
 # Fullstack Calculator
 
-A calculator with a Go REST API and a planned React + TypeScript frontend.
-The current branch implements the backend only. The frontend and Docker setup
-are not implemented or validated yet.
+A calculator with a React + TypeScript interface and a Go REST API.
+The UI supports the four basic arithmetic operations, keyboard submission,
+responsive layouts, and accessible validation and result feedback.
+All arithmetic results come from the API.
 
 ## Requirements
 
 - Go 1.27.0 or later (see `backend/go.mod`).
 - Git.
-- Node.js and npm will be needed for the frontend in a later feature.
+- Node.js 22.12 or later and npm (verified with Node.js 24.19.0 and npm 11.17.0).
 
 The backend uses only the Go standard library; there are no external Go dependencies.
 
 ## Run locally
 
-From the repository root:
+Open two terminals at the repository root. In the first, start the API:
 
 ```sh
 cd backend
@@ -31,6 +32,55 @@ go run ./cmd/api
 
 On macOS/Linux, use `HTTP_ADDR=127.0.0.1:8081 go run ./cmd/api`.
 Always run Go commands from `backend`, where `go.mod` is located.
+
+In the second terminal, install the frontend dependencies and start Vite:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`. Choose an operation, enter two numbers, and click
+**Calculate** or press Enter from a number field. **Clear** resets the form and
+returns focus to the first number. Decimal input uses a dot; negative numbers
+and scientific notation are accepted.
+
+Vite forwards `/api` requests to `http://127.0.0.1:8080`, so no permissive CORS
+configuration is needed. Stop either process with Ctrl+C in its terminal.
+
+### Frontend configuration
+
+Defaults work without an environment file. To customize them, copy
+`frontend/.env.example` to `frontend/.env.local` and edit:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | `/api/v1` | Browser-facing API base path, excluding `/calculate`. |
+| `API_PROXY_TARGET` | `http://127.0.0.1:8080` | Target used by the Vite development/preview proxy. |
+
+If the API uses another port, update `API_PROXY_TARGET` to match `HTTP_ADDR`.
+Restart Vite after environment changes. `VITE_` variables are public build-time
+configuration, not a place for secrets. An absolute cross-origin API URL requires
+an explicit CORS policy on that API; the default relative path avoids this.
+
+### Production build and local preview
+
+```sh
+cd frontend
+npm run build
+npm run preview
+```
+
+With the API running, open `http://127.0.0.1:4173`. Preview also uses the API proxy.
+The build output is `frontend/dist`. Vite preview is for local verification, not
+production hosting. A deployment must serve the static files and route `/api`
+to the Go service, or configure an API origin with the appropriate CORS policy.
+
+### Docker
+
+Docker and Compose are deferred because virtualization is unavailable locally.
+Docker configuration and execution have not been implemented or validated.
 
 ## API
 
@@ -116,6 +166,20 @@ On macOS/Linux, use `bin/calculator-api` for the build output instead of `.exe`.
 Coverage measurements and verification details are recorded in [COVERAGE.md](COVERAGE.md).
 Generated binaries and coverage files are excluded from Git.
 
+Frontend commands, from `frontend`:
+
+```sh
+npm test
+npm run test:coverage
+npm run typecheck
+npm run build
+```
+
+`npm run test:watch` reruns tests during development. The HTML coverage report is
+generated at `frontend/coverage/index.html`. Component tests mock the API client;
+API-client tests mock `fetch` to verify serialization, responses, cancellation,
+timeouts, and connection failures. Real API integration is verified separately.
+
 ## Design decisions
 
 - `internal/calculator` owns arithmetic and domain errors and has no HTTP dependency.
@@ -131,13 +195,27 @@ Generated binaries and coverage files are excluded from Git.
   scope. Binary floating-point rounding (for example, `0.1 + 0.2`) is expected;
   this is not an exact-decimal financial calculator. Overflow is rejected;
   underflow follows normal float64 behavior and may round to zero.
-- CORS is not enabled. The frontend feature should use a Vite development proxy
-  to reach this API; a browser calling a different origin directly needs an
-  explicitly configured allowed origin.
+- React state stays inside `Calculator`; no global state library is necessary.
+  `services/calculatorApi.ts` owns HTTP communication and response validation.
+- The UI provides labeled inputs, native radio-button keyboard interaction,
+  visible focus styles, a skip link, inline errors, and an `aria-live` result
+  region. Invalid submissions focus the first field needing attention.
+- Loading disables form controls and duplicate submissions. Editing an operand
+  or operation clears the previous answer so it cannot be mistaken for a result
+  of the new input. Failed requests preserve inputs for retry.
+- Client-side checks improve feedback; backend validation remains authoritative.
+  Calculations are never performed locally in place of an API request.
+- Results are displayed with up to 15 significant digits and scientific notation
+  for large or very small values. Display formatting does not change the API result.
+- Fetch requests have a 15-second deadline and are cancelled on component unmount.
+  Long debugger pauses can exceed client or server timeouts; debug calculator
+  tests to inspect the arithmetic without an HTTP deadline.
+- Vite proxies development and preview API traffic to Go. Backend CORS stays
+  disabled. The interface uses system fonts and CSS, without external images,
+  font downloads, or a visual component framework.
 
 ## Current limitations and next steps
 
-- React UI, frontend tests, and frontend coverage are pending.
 - Docker and Docker Compose are deferred because hardware virtualization is
   unavailable on the development machine. No Docker execution is claimed.
 - Graceful shutdown and optional operations are possible future improvements.
@@ -146,7 +224,8 @@ Generated binaries and coverage files are excluded from Git.
 
 ## AI assistance
 
-AI assistance was used during setup and backend development. See [PROMPTS.md](PROMPTS.md)
+AI assistance was used during backend and frontend development. See [PROMPTS.md](PROMPTS.md)
 for a chronological record of relevant requests, changes, and review status.
-Gabriel's personal code review and the final delivery validation remain pending;
-automated checks performed by the assistant are recorded separately.
+Gabriel confirmed manual backend checks and a passing backend unit-test run.
+His final source-code review and frontend acceptance remain pending; checks
+performed by the assistant are recorded separately.

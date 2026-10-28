@@ -103,3 +103,26 @@ Also explained how to debug the calculator tests independently of a running API.
 issues. He also confirmed that the unit tests passed in his environment.
 Coverage figures in `COVERAGE.md` reflect the previously recorded measurements
 performed by the assistant.
+
+## 7. React Frontend and API Integration
+
+**Prompt summary:** Implement a React frontend that calls the existing API and
+applies UX/UI practices to improve the user experience, starting from the `dev`
+branch with a separate feature branch.
+
+**Objective:** Complete the full-stack calculation flow with a clear, accessible,
+and responsive interface.
+
+**AI contribution:** Implemented React with TypeScript and Vite, a typed API client,
+and a development/preview proxy to the Go API. The interface includes operation
+selection, labeled number inputs, keyboard submission, inline validation,
+loading and retry states, an announced result region, and reset behavior.
+Editing inputs clears stale results, pending requests prevent duplicate
+submissions, and unmounting cancels the active request. The UI uses CSS and
+system fonts without a component framework or external visual assets.
+
+**Verification:** Added component and API-client tests using Vitest and React
+Testing Library. Verification results, production build checks, real API
+integration checks, and responsive-browser checks are recorded in `COVERAGE.md`.
+
+**Developer review:** Frontend review and acceptance by Gabriel remain pending.
