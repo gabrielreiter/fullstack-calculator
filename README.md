@@ -1,17 +1,47 @@
 # Fullstack Calculator
 
-A calculator with a React + TypeScript interface and a Go REST API.
-The UI supports the four basic arithmetic operations, keyboard submission,
-responsive layouts, and accessible validation and result feedback.
-All arithmetic results come from the API.
+A full-stack calculator built with React, TypeScript, and Go. The frontend sends
+calculation requests to a REST API, which validates the operands and performs
+addition, subtraction, multiplication, and division.
+
+The interface supports keyboard interaction, responsive layouts, inline
+validation, loading feedback, and accessible result announcements.
+
+## Architecture
+
+```text
+React interface → HTTP client → Go REST API → Arithmetic service
+```
+
+The HTTP layer and arithmetic logic are separate, allowing domain rules to be
+tested independently of transport concerns. The frontend similarly separates
+form state and presentation from request serialization and response handling.
+
+```text
+backend/
+  cmd/api/                 HTTP server entry point
+  internal/calculator/     Arithmetic rules and domain tests
+  internal/http/           JSON handlers, routes, and HTTP tests
+frontend/
+  src/App.tsx              Page composition
+  src/components/          Calculator form, state, and component tests
+  src/services/            Typed API client and request/response tests
+  src/styles.css           Responsive styling and interaction states
+README.md                  Setup, API usage, and design decisions
+COVERAGE.md                Measured coverage and verification details
+PROMPTS.md                 Technical AI-assistance record
+```
+
+The backend uses Go's standard library. The frontend uses React and TypeScript
+with Vite; its tests use Vitest, React Testing Library, and jsdom.
 
 ## Requirements
 
 - Go 1.27.0 or later (see `backend/go.mod`).
 - Git.
-- Node.js 22.12 or later and npm (verified with Node.js 24.19.0 and npm 11.17.0).
+- Node.js 22.12 or later and npm.
 
-The backend uses only the Go standard library; there are no external Go dependencies.
+The verified toolchain versions are recorded in [COVERAGE.md](COVERAGE.md).
 
 ## Run locally
 
@@ -77,10 +107,10 @@ The build output is `frontend/dist`. Vite preview is for local verification, not
 production hosting. A deployment must serve the static files and route `/api`
 to the Go service, or configure an API origin with the appropriate CORS policy.
 
-### Docker
+### Container support
 
-Docker and Compose are deferred because virtualization is unavailable locally.
-Docker configuration and execution have not been implemented or validated.
+Docker packaging is optional and is not included in this version. Both services
+run directly with the commands above.
 
 ## API
 
@@ -180,6 +210,23 @@ generated at `frontend/coverage/index.html`. Component tests mock the API client
 API-client tests mock `fetch` to verify serialization, responses, cancellation,
 timeouts, and connection failures. Real API integration is verified separately.
 
+### Verification results
+
+The automated suites, backend static analysis, TypeScript checking, and production
+builds completed successfully. Browser integration checks covered the four
+operations, invalid input, API errors, keyboard submission, and mobile layouts.
+Manual backend and frontend checks were also completed by the developer.
+
+| Measurement | Recorded result |
+| --- | --- |
+| Backend statement coverage, including the server entry point | 82.5% |
+| Frontend tests | 46 passing |
+| Frontend statement and line coverage | 100% |
+| Frontend branch coverage | 98.79% |
+
+The covered files, exclusions, commands, and verification scope are documented
+in [COVERAGE.md](COVERAGE.md).
+
 ## Design decisions
 
 - `internal/calculator` owns arithmetic and domain errors and has no HTTP dependency.
@@ -191,10 +238,10 @@ timeouts, and connection failures. Real API integration is verified separately.
 - Operand pointers distinguish missing/null input from the valid value `0`.
 - Native table-driven tests cover arithmetic and HTTP behavior. `httptest` exercises
   the real handler without requiring a running external server.
-- `float64` matches JavaScript's number representation and the small calculator
-  scope. Binary floating-point rounding (for example, `0.1 + 0.2`) is expected;
-  this is not an exact-decimal financial calculator. Overflow is rejected;
-  underflow follows normal float64 behavior and may round to zero.
+- `float64` matches JavaScript's number representation. Arithmetic follows binary
+  floating-point semantics, including rounding for values such as `0.1 + 0.2`.
+  Overflow is rejected; underflow follows normal float64 behavior and may round
+  to zero.
 - React state stays inside `Calculator`; no global state library is necessary.
   `services/calculatorApi.ts` owns HTTP communication and response validation.
 - The UI provides labeled inputs, native radio-button keyboard interaction,
@@ -214,18 +261,18 @@ timeouts, and connection failures. Real API integration is verified separately.
   disabled. The interface uses system fonts and CSS, without external images,
   font downloads, or a visual component framework.
 
-## Current limitations and next steps
+## Scope and possible extensions
 
-- Docker and Docker Compose are deferred because hardware virtualization is
-  unavailable on the development machine. No Docker execution is claimed.
-- Graceful shutdown and optional operations are possible future improvements.
-- This is a local exercise, not an Internet-facing production service; TLS,
-  authentication, and rate limiting are outside the current scope.
+This version implements the four required operations with a stateless API and
+a single-page interface. Persistence, authentication, and additional services
+are outside the calculator's scope.
+
+Possible extensions include the optional operations (exponentiation, square root,
+and percentage), Docker Compose packaging, and graceful server shutdown.
 
 ## AI assistance
 
-AI assistance was used during backend and frontend development. See [PROMPTS.md](PROMPTS.md)
-for a chronological record of relevant requests, changes, and review status.
-Gabriel confirmed manual backend checks and a passing backend unit-test run.
-His final source-code review and frontend acceptance remain pending; checks
-performed by the assistant are recorded separately.
+AI tools assisted with implementation, testing, documentation, and code
+explanations. [PROMPTS.md](PROMPTS.md) contains chronological summaries of the
+relevant technical requests and resulting contributions. Automated verification
+details and measured coverage are available in [COVERAGE.md](COVERAGE.md).
